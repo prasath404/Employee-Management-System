@@ -26,33 +26,64 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, Object> body = defaultBody(HttpStatus.BAD_REQUEST, "Validation failed");
+
+        Map<String, Object> body = defaultBody(
+                HttpStatus.BAD_REQUEST,
+                "Validation failed"
+        );
+
         Map<String, String> errors = new HashMap<>();
+
         ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = error instanceof FieldError ? ((FieldError) error).getField() : error.getObjectName();
+
+            String fieldName;
+
+            if (error instanceof FieldError) {
+                fieldName = ((FieldError) error).getField();
+            } else {
+                fieldName = error.getObjectName();
+            }
+
             errors.put(fieldName, error.getDefaultMessage());
         });
+
         body.put("errors", errors);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred"
+        );
     }
 
-    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
+    private ResponseEntity<Map<String, Object>> buildResponse(
+            HttpStatus status,
+            String message) {
+
         Map<String, Object> body = defaultBody(status, message);
-        return ResponseEntity.status(status).body(body);
+
+        return ResponseEntity
+                .status(status)
+                .body(body);
     }
 
-    private Map<String, Object> defaultBody(HttpStatus status, String message) {
+    private Map<String, Object> defaultBody(
+            HttpStatus status,
+            String message) {
+
         Map<String, Object> body = new HashMap<>();
+
         body.put("timestamp", Instant.now().toString());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
+
         return body;
     }
 }
-
